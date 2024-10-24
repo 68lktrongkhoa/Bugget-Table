@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import { CalendarComponent } from "../../calendar/calendar/calendar.component";
 import { MatDialog } from '@angular/material/dialog';
 import cloneDeep from 'lodash/cloneDeep';
+import { DialogConfirmCopyComponent } from '../dialog-confirm-copy/dialog-confirm-copy/dialog-confirm-copy.component';
+import { DialogAddNewCategoryComponent } from '../dialog-add-new-category/dialog-add-new-category/dialog-add-new-category.component';
 
 interface BudgetRowBase {
   category: string ;
@@ -32,6 +34,7 @@ export class BudgetComponent {
   yearCurrent: number = new Date().getFullYear();
   months: string[] = this.getMonths(1,12,this.yearCurrent); 
   showCalendar: boolean = false;
+  isContextMenuVisible : boolean = false;
   year: string = '';
   smonth: number | undefined;
   emonth: number | undefined;
@@ -128,38 +131,52 @@ budgetData: BudgetRow[] = [
     this.budgetData = cloneDeep(this.budgetData);
     
   }
-  
 
-  onValueChange(rowIndex: number, monthUpdate: string, target: EventTarget | null) {
+  onInputChange(rowIndex: number, monthUpdate: string, target: EventTarget | null): void {
     if (target instanceof HTMLTableCellElement) {
-      this.budgetData = cloneDeep(this.budgetData);
-      console.log("this.budgetData",this.budgetData)
-      const value = target.textContent || ''; 
-      const numericValue = parseFloat(value) || 0; 
+      const value = target.textContent || '';
+      const numericValue = parseFloat(value) || 0;
       this.budgetData[rowIndex][monthUpdate] = numericValue;
-      this.updateTotals(monthUpdate, rowIndex); 
     }
   }
   
+  onEnterPress(rowIndex: number, monthUpdate: string, target: EventTarget | null): void {
+    if (target instanceof HTMLTableCellElement) {
+      this.budgetData = cloneDeep(this.budgetData);
+      const value = target.textContent || '';
+      const numericValue = parseFloat(value) || 0;
+      this.budgetData[rowIndex][monthUpdate] = numericValue;
+      this.updateTotals(monthUpdate, rowIndex);
+    }
+  }
   
-
-  updateTotals(monthUpdate: string, rowIndex: number ) {
-    this.budgetData.reduce((sum, row) => {
+  onCellBlur(rowIndex: number, monthUpdate: string, target: EventTarget | null): void {
+    if (target instanceof HTMLTableCellElement) {
+      this.budgetData = cloneDeep(this.budgetData); 
+      const value = target.textContent || '';
+      const numericValue = parseFloat(value) || 0;
+      this.budgetData[rowIndex][monthUpdate] = numericValue;
+      this.updateTotals(monthUpdate, rowIndex);
+    }
+  }
+  
+  updateTotals(monthUpdate: string, rowIndex: number) {
+    const rowToUpdate = this.budgetData[rowIndex];
+    const rowType = rowToUpdate.type;
+    let sum = 0;
+  
+    this.budgetData.forEach(row => {
       const value = row[monthUpdate];
-      const type = row.type;
-      let cat = row.category;
-      if( this.budgetData[rowIndex].type == type ){
-        if (cat == "Sub Totals"){
-          row[monthUpdate] = 0;
-          row[monthUpdate] = sum ;
-        }else if (typeof value === 'number') {
-          sum = sum + value
+      const { type, category, parent } = row;
+
+      if (type === rowType && !parent) {
+        if (category === "Sub Totals") {
+          row[monthUpdate] = sum;
+        } else if (typeof value === 'number') {
+          sum += value;
         }
       }
-      return sum;
-    }, 0);
-  
-    // Cập nhật tổng toàn bộ nếu cần
+    })
     this.overallTotal = this.budgetData.reduce((sum, row) => sum + (row.total || 0), 0);
   }
 
@@ -188,9 +205,75 @@ budgetData: BudgetRow[] = [
 
   showContextMenu(event: MouseEvent, rowIndex: number, month: string) {
     event.preventDefault();
-    // Logic cho "Áp dụng cho tất cả"
+    this.isContextMenuVisible = true;
+    const dialogRef = this.dialog.open(DialogConfirmCopyComponent, {
+      data: { rowIndex, month }, 
+      position: { top: `${event.clientY}px`, left: `${event.clientX}px` } 
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      let a = this.budgetData[rowIndex][month]
+      if (result?.action === 'apply-row') {
+        this.applyAllCellInRow(rowIndex, month , a ); 
+      } else if (result?.action === 'apply-col') {
+        this.applyAllCellInCol(rowIndex, month , a); 
+      }
+    });
   }
 
+  applyAllCellInRow(index: number, month: string , a: any): void {
+    this.budgetData.forEach((row: any, i: number) => {
+      if(row.parent == false ){
+        if (i == index){
+          Object.keys(row).forEach(key => {
+            if (key !== 'parent' && key !=='category' && key !== 'type') { 
+              row[key] = a;
+              this.updateTotals(key,i);
+            }
+          });
+        }
+      }
+    });
+    this.budgetData = cloneDeep(this.budgetData);
+  }
+
+  applyAllCellInCol(index: number, month: string , a: any): void {
+    this.budgetData.forEach((row: any, i: number) => {
+      if(row.parent == false ){
+        row[month] = a;
+        Object.keys(row).forEach(key => {
+          if (key !== 'parent' && key !=='category' && key !== 'type' && key == month) { 
+            row[key] = a;
+            this.updateTotals(key,i);
+          }
+        });
+      }
+    })
+    this.budgetData = cloneDeep(this.budgetData);
+  }
+
+  addNewCategory(){
+    const dialogRef = this.dialog.open(DialogAddNewCategoryComponent, {
+      data: this.budgetData,
+      width: "50%",
+      height: "50%"
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) { 
+        console.log("result",result)
+        const newCategory = [result[0].parent, ...result[0].children.map((child: any) => child.name)];
+        this.budgetData.push(
+          ...newCategory.map((category, index) => ({
+            category, 
+            parent: index === 0,
+            type: result[0].type,
+            ...this.initializeRow(index)
+          })),
+          { category: 'Sub Totals', type: result[0].type , ...this.initializeRow(99) } // Thêm dòng tổng
+        );
+      }
+    })
+  }
   exportToPDF() {
     const doc = new jsPDF();
     const tableElement = document.querySelector('table');
@@ -240,7 +323,7 @@ budgetData: BudgetRow[] = [
       data: dialogData
     });
     
-    dialogRef.afterClosed().subscribe(result => { // Lắng nghe sự kiện đóng dialog
+    dialogRef.afterClosed().subscribe(result => {
       if (result) {   
         this.months = [];
         if (isSDate){

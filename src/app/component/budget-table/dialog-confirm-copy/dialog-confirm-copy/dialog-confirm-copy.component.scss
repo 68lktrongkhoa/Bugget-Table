@@ -1,0 +1,28 @@
+.apply-btn{
+    margin-right: 10px;
+    background-color: transparent;
+    border: 1px soild #ccc;
+    border-radius: 4px;
+    height: 35px;
+
+    &:hover {
+        background-color: #003cff;
+        color: white
+    }
+}
+
+.cancel-btn{
+    background-color: transparent;
+    border: 1px soild #ccc;
+    border-radius: 4px;
+    height: 35px;
+
+    &:hover {
+        background-color: #ff0000;
+        color: white
+    }
+}
+.confirm-txt{
+    margin-bottom: 30px;
+}
+

@@ -1,0 +1,30 @@
+
+<h2 class="header-dialog-add" mat-dialog-title>
+    Create new category
+    <button class="button-close-dialog" mat-icon-button (click)="onNoClick()" aria-label="Close">
+      <mat-icon>close</mat-icon> 
+    </button>
+</h2>
+<div class = "content" mat-dialog-content>
+    <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+    </div>
+    <div class="form-group">
+        <label for="categoryName">Name Category Parent</label>
+        <input id="categoryName" type="text" [(ngModel)]="categoryName" placeholder="Enter Name" />
+    </div>
+
+    <div class="form-group">
+        <label>List Phần Tử Con</label>
+        <div *ngFor="let child of childItems; let i = index" class="child-item">
+          <input type="text" [(ngModel)]="child.name" placeholder="Enter Child Item" />
+          <button class = "delete-child" (click)="removeChild(i)" aria-label="Delete">X</button>
+        </div>
+        <button (click)="addChild()" mat-button color="primary">Add new child</button>
+    </div>
+</div>
+<div class="dialog-footer">
+    <button class= "btn-confirm" mat-button (click)="onNoClick()">Cancel</button>
+    <button class= "btn-confirm" mat-button (click)="onSave()">Save</button>
+</div>
+  

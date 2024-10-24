@@ -1,0 +1,71 @@
+.header-dialog-add{
+    background-color: #cccccc50;
+    color: black;
+}
+.button-close-dialog{
+    float : right;
+    height: 30px;
+    margin-right: 10px;
+
+    
+    &:hover {
+        background-color: red !important;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column; 
+    margin-bottom: 16px; 
+  }
+  
+  .form-group label {
+    margin-bottom: 4px; 
+  }
+  .content{
+    padding: 20px;
+    border: 0.5px soild #ccc;
+   
+  }
+  
+  .form-group input {
+    padding: 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    font-size: 16px;
+  }
+
+  .child-item {
+    display: flex;
+    align-items: center; 
+    margin-bottom: 8px; 
+  }
+  
+  .child-item input {
+    margin-right: 8px; 
+    flex: 1; 
+  }
+
+  .delete-child{
+    border-radius: 4px;
+    border : 0.5px solid #ccc;
+    &:hover {
+        background-color: red;
+        color: white !important;
+    }
+  }
+
+  .btn-confirm{
+    height: 25px;
+    float: right;
+    margin-right: 10px;
+    border-radius: 4px;
+    border : 0.5px solid #ccc;
+  }
+
+  .error-message{
+    color: red;
+    font-style: italic;
+  }
+  
+  

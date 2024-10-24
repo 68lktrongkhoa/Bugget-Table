@@ -4,6 +4,7 @@
     <button (click)="exportToPDF()">PDF</button>
     <button (click)="save()">SAVE</button>
     <button (click)="cleanAllData()">Clean All Data</button>
+    <button (click)="addNewCategory()">New category</button>
   </div>
   <div class="calendar">
     <div class="calendar-row">
@@ -38,10 +39,11 @@
           <td  contenteditable="true" (keydown.enter)="addRow(i)" >
             {{ row.category }}
           </td>
-          <td *ngFor="let month of months" contenteditable="true" 
-              (input)="onValueChange(i, month, $event.target)" 
-              (keydown.enter)="updateTotals(month, i)"
-              (contextmenu)="showContextMenu($event, i, month)">
+          <td *ngFor="let month of months" contenteditable="true"
+            (input)="onInputChange(i, month, $event.target)"
+            (keydown.enter)="onEnterPress(i, month, $event.target)"
+            (blur)="onCellBlur(i, month, $event.target)"
+            (contextmenu)="showContextMenu($event, i, month)">
             {{ row[month] }}
           </td>
           <td class="container-action-btn-of-row">
@@ -52,7 +54,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <td><strong>Tổng Cộng</strong></td>
+        <td><strong>TOTAL</strong></td>
         <td *ngFor="let month of months">{{ getOverallTotal(month) }}</td>
         <td>{{ overallTotal }}</td>
       </tr>
