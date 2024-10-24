@@ -1,0 +1,63 @@
+<div>
+  <h1>BUDGET TABLE </h1>
+  <div class = "btn">
+    <button (click)="exportToPDF()">PDF</button>
+    <button (click)="save()">SAVE</button>
+    <button (click)="cleanAllData()">Clean All Data</button>
+  </div>
+  <div class="calendar">
+    <div class="calendar-row">
+      <span>Start month</span>
+      <input type="text" 
+             [value]="formattedSDate" 
+             (click)="ChooseDate(true)" 
+             placeholder="Choose Date" 
+             readonly />
+    </div>
+    
+    <div class="calendar-row">
+      <span>End month</span>
+      <input type="text" 
+             [value]="formattedEDate" 
+             (click)="ChooseDate(false)" 
+             placeholder="Choose Date" 
+             readonly />
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Start Period V End Period V</th>
+        <th *ngFor="let month of months">{{ month }}</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr *ngFor="let row of budgetData; let i = index" [ngClass]="row.parent ? 'income-row' : '' ">
+          <td  contenteditable="true" (keydown.enter)="addRow(i)" >
+            {{ row.category }}
+          </td>
+          <td *ngFor="let month of months" contenteditable="true" 
+              (input)="onValueChange(i, month, $event.target)" 
+              (keydown.enter)="updateTotals(month, i)"
+              (contextmenu)="showContextMenu($event, i, month)">
+            {{ row[month] }}
+          </td>
+          <td class="container-action-btn-of-row">
+            <button class="act-btn add-row-btn" *ngIf="!row.parent" (click)="deleteRow(i)">Delete</button>
+            <button class="act-btn delete-row-btn" *ngIf="!row.parent" (click)="addRow(i)">Add Row</button>
+          </td>
+        </tr>     
+    </tbody>
+    <tfoot>
+      <tr>
+        <td><strong>Tổng Cộng</strong></td>
+        <td *ngFor="let month of months">{{ getOverallTotal(month) }}</td>
+        <td>{{ overallTotal }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+

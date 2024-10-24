@@ -1,0 +1,68 @@
+/* budget-builder.component.css */
+table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+.btn {
+    display: flex;            
+    justify-content: space-between; 
+    padding: 10px; 
+    width : 30% ; 
+    height: 30px; 
+   
+}
+
+.btn button {
+    flex: 1;                 
+    margin: 0 5px;  
+    background-color: transparent;   
+    
+    &:hover{
+      background-color: #696969; 
+      color: white;
+    }         
+}
+
+.container-action-btn-of-row{
+  display: flex;            
+    justify-content: space-between; 
+    padding: 10px; 
+    
+    .act-btn{
+      flex: 0.5;                 
+      margin: 0 5px; 
+    }
+}
+
+  
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+
+  
+  td[contenteditable="true"]:focus {
+    outline: 1px solid blue;
+  }
+  .income-row td {
+    padding: 4px 8px; 
+    border: none
+    
+  }
+
+  .calendar-row {
+    display: flex;
+    align-items: center; /* Canh giữa theo chiều dọc */
+    margin-bottom: 10px; /* Tạo khoảng cách giữa các hàng */
+  }
+  
+  .calendar-row span {
+    margin-right: 10px; /* Tạo khoảng cách giữa span và input */
+  }
+  
+  
+  .ele-tr {
+    border: none !important;
+  }
