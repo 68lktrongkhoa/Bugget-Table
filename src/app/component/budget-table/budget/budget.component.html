@@ -36,19 +36,23 @@
     <tbody>
       
         <tr *ngFor="let row of budgetData; let i = index" [ngClass]="row.parent ? 'income-row' : '' ">
-          <td  contenteditable="true" (keydown.enter)="addRow(i)" >
+          <td #editableCell contenteditable="true" (keydown.enter)="addRow(i)" (keydown)="onArrowKey(i, 0, $event)">
             {{ row.category }}
           </td>
-          <td *ngFor="let month of months" contenteditable="true"
+          <td  #editableCell *ngFor="let month of months; let monthIndex = index" contenteditable="true"
             (input)="onInputChange(i, month, $event.target)"
             (keydown.enter)="onEnterPress(i, month, $event.target)"
-            (blur)="onCellBlur(i, month, $event.target)"
+            (keydown)="onArrowKey(i, monthIndex + 1, $event)"
             (contextmenu)="showContextMenu($event, i, month)">
             {{ row[month] }}
           </td>
-          <td class="container-action-btn-of-row">
-            <button class="act-btn add-row-btn" *ngIf="!row.parent" (click)="deleteRow(i)">Delete</button>
-            <button class="act-btn delete-row-btn" *ngIf="!row.parent" (click)="addRow(i)">Add Row</button>
+          <td #editableCell class="container-action-btn-of-row"  contenteditable="true" (keydown)="onArrowKey(i, months.length + 1 , $event)">
+            <button class="act-btn add-row-btn" *ngIf="!row.parent" (click)="deleteRow(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+            <button class="act-btn delete-row-btn" *ngIf="!row.parent" (click)="addRow(i)">
+              <mat-icon>add</mat-icon>
+            </button>            
           </td>
         </tr>     
     </tbody>

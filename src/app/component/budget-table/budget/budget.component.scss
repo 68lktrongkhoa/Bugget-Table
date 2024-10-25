@@ -27,13 +27,17 @@ table {
 }
 
 .container-action-btn-of-row{
-  display: flex;            
+    display: flex;            
     justify-content: space-between; 
-    padding: 10px; 
+    padding: 8px;
+    border: 1px solid #ccc;
     
     .act-btn{
       flex: 0.5;                 
       margin: 0 5px; 
+    }
+    &:focus{
+      outline: 1px solid blue;
     }
 }
 

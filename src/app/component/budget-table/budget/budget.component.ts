@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import cloneDeep from 'lodash/cloneDeep';
 import { DialogConfirmCopyComponent } from '../dialog-confirm-copy/dialog-confirm-copy/dialog-confirm-copy.component';
 import { DialogAddNewCategoryComponent } from '../dialog-add-new-category/dialog-add-new-category/dialog-add-new-category.component';
+import { MatIconModule } from '@angular/material/icon';
 
 interface BudgetRowBase {
   category: string ;
@@ -25,12 +26,13 @@ interface BudgetRow extends BudgetRowBase {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [FormsModule, CommonModule, CalendarComponent],
+  imports: [FormsModule, CommonModule, CalendarComponent, MatIconModule],
   templateUrl: './budget.component.html',
   styleUrls: ['./budget.component.scss']
 })
 
 export class BudgetComponent {
+  @ViewChildren('editableCell') cells!: QueryList<ElementRef>;
   yearCurrent: number = new Date().getFullYear();
   months: string[] = this.getMonths(1,12,this.yearCurrent); 
   showCalendar: boolean = false;
@@ -137,7 +139,17 @@ budgetData: BudgetRow[] = [
       const value = target.textContent || '';
       const numericValue = parseFloat(value) || 0;
       this.budgetData[rowIndex][monthUpdate] = numericValue;
+      this.setCursorToEnd(target);
     }
+  }
+
+  setCursorToEnd(element: HTMLElement) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
   }
   
   onEnterPress(rowIndex: number, monthUpdate: string, target: EventTarget | null): void {
@@ -147,6 +159,48 @@ budgetData: BudgetRow[] = [
       const numericValue = parseFloat(value) || 0;
       this.budgetData[rowIndex][monthUpdate] = numericValue;
       this.updateTotals(monthUpdate, rowIndex);
+    }
+  }
+
+  onArrowKey(rowIndex: number, colIndex: number, event: KeyboardEvent) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      const rowCount = this.budgetData.length;
+      const colCount = this.months.length + 2; 
+      let newRowIndex = rowIndex;
+      let newColIndex = colIndex;
+  
+      switch (event.key) {
+        case 'ArrowUp':
+          newRowIndex = rowIndex > 0 ? rowIndex - 1 : rowCount - 1;
+          break;
+        case 'ArrowDown':
+          newRowIndex = rowIndex < rowCount - 1 ? rowIndex + 1 : 0;
+          break;
+        case 'ArrowLeft':
+          if (colIndex === 0) {
+            newRowIndex = rowIndex > 0 ? rowIndex - 1 : rowCount - 1;
+            newColIndex = colCount - 1;
+          } else {
+            newColIndex = colIndex - 1;
+          }
+          break;
+        case 'ArrowRight':
+          if (colIndex === colCount - 1) {
+            newRowIndex = rowIndex < rowCount - 1 ? rowIndex + 1 : 0;
+            newColIndex = 0;
+          } else {
+            newColIndex = colIndex + 1;
+          }
+          break;
+      }
+  
+      const cellIndex = newRowIndex * colCount + newColIndex;
+      const targetCell = this.cells.toArray()[cellIndex];
+      
+      if (targetCell) {
+        targetCell.nativeElement.focus();
+        event.preventDefault();
+      }
     }
   }
   
@@ -269,7 +323,7 @@ budgetData: BudgetRow[] = [
             type: result[0].type,
             ...this.initializeRow(index)
           })),
-          { category: 'Sub Totals', type: result[0].type , ...this.initializeRow(99) } // Thêm dòng tổng
+          { category: 'Sub Totals', type: result[0].type , ...this.initializeRow(99) } 
         );
       }
     })
@@ -294,7 +348,7 @@ budgetData: BudgetRow[] = [
   }
 
   save(){
-    
+    //Save data
   }
 
   cleanAllData(){
@@ -341,8 +395,6 @@ budgetData: BudgetRow[] = [
       this.showCalendar = false;
       this.months = this.getMonths(this.smonth, this.emonth,this.year)
     });
-    
-    
   }
 }
 
