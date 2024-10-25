@@ -3,7 +3,7 @@
   <div class = "btn">
     <button (click)="exportToPDF()">PDF</button>
     <button (click)="save()">SAVE</button>
-    <button (click)="cleanAllData()">Clean All Data</button>
+    <button (click)="cleanAllData()">Return default table</button>
     <button (click)="addNewCategory()">New category</button>
   </div>
   <div class="calendar">
@@ -30,6 +30,7 @@
       <tr>
         <th>Start Period V End Period V</th>
         <th *ngFor="let month of months">{{ month }}</th>
+        <th>Rolling Total</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -46,13 +47,17 @@
             (contextmenu)="showContextMenu($event, i, month)">
             {{ row[month] }}
           </td>
-          <td #editableCell class="container-action-btn-of-row"  contenteditable="true" (keydown)="onArrowKey(i, months.length + 1 , $event)">
-            <button class="act-btn add-row-btn" *ngIf="!row.parent" (click)="deleteRow(i)">
+          <td #editableCell contenteditable="true" class="rolling-total" 
+          (keydown)="onArrowKey(i, months.length + 1 , $event)"
+          [textContent]="calculateRowTotal(row)">
+          </td>
+          <td #editableCell class="container-action-btn-of-row"  contenteditable="true" (keydown)="onArrowKey(i, months.length + 2 , $event)">
+            <button class="act-btn add-row-btn" *ngIf="!row.parent && !row.isSub" (click)="deleteRow(i)">
               <mat-icon>delete</mat-icon>
             </button>
-            <button class="act-btn delete-row-btn" *ngIf="!row.parent" (click)="addRow(i)">
+            <button class="act-btn delete-row-btn" *ngIf="!row.parent && !row.isSub" (click)="addRow(i)">
               <mat-icon>add</mat-icon>
-            </button>            
+            </button>
           </td>
         </tr>     
     </tbody>
@@ -60,6 +65,7 @@
       <tr>
         <td><strong>TOTAL</strong></td>
         <td *ngFor="let month of months">{{ getOverallTotal(month) }}</td>
+        <td>{{ getRollingTotal() }}</td>
         <td>{{ overallTotal }}</td>
       </tr>
     </tfoot>

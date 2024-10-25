@@ -14,7 +14,8 @@ interface BudgetRowBase {
   category: string ;
   parent: boolean;
   type: number;
-  emptyRow:boolean
+  isSub: boolean;
+  emptyRow:boolean;
   subCategories?: BudgetRow[];
   total: number | '';  
 }
@@ -53,17 +54,19 @@ budgetData: BudgetRow[] = [
   ...this.generateIcome.map((category, index) => ({
     category, 
     parent: index === 0 ? true : false,
+    isSub: false,
     type: 1,
     ...this.initializeRow(index)
   })),
-  { category: 'Sub Totals',type: 1,...this.initializeRow(99)},
+  { category: 'Sub Totals', isSub: true, type: 1,...this.initializeRow(99)},
   ...this.otherIncome.map((category, index) => ({
     category,
     parent: index === 0 ? true : false,
+    isSub: false,
     type: 2,
     ...this.initializeRow(index)
   })),
-  { category: 'Sub Totals',type: 2,...this.initializeRow(99)} 
+  { category: 'Sub Totals',  isSub: true, type: 2,...this.initializeRow(99)} 
 ];
 
   overallTotal: number = 0;
@@ -77,7 +80,7 @@ budgetData: BudgetRow[] = [
     const [emonth, eyear] = this.formattedEDate.split('/');
     this.smonth = parseInt(smonth, 10); 
     this.emonth = parseInt(emonth, 10); 
-    this.months = this.getMonths(this.smonth, this.emonth,syear);
+    this.months = this.getMonths(2, this.emonth,syear);
   }
 
   formatDate(date: Date): string {
@@ -119,16 +122,11 @@ budgetData: BudgetRow[] = [
   addRow(index: number) {
     if (index <= this.budgetData.length - 1) {
       this.budgetData.splice(index + 1, 0, { 
-        category: '', 
+        category: '',
+        parent: false, 
         type: this.budgetData[index].type,
         ...this.initializeRow(index + 1) 
       });
-      for (let i = index + 2; i < this.budgetData.length; i++) {
-        this.budgetData[i] = {
-          ...this.budgetData[i],
-          ...this.initializeRow(i)
-        };
-      }
     }
     this.budgetData = cloneDeep(this.budgetData);
     
@@ -165,7 +163,7 @@ budgetData: BudgetRow[] = [
   onArrowKey(rowIndex: number, colIndex: number, event: KeyboardEvent) {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       const rowCount = this.budgetData.length;
-      const colCount = this.months.length + 2; 
+      const colCount = this.months.length + 3; 
       let newRowIndex = rowIndex;
       let newColIndex = colIndex;
   
@@ -203,6 +201,20 @@ budgetData: BudgetRow[] = [
       }
     }
   }
+
+  calculateRowTotal(row: any) {
+    if (!row.parent) {
+      return this.months.reduce((total, month) => total + (parseFloat(row[month]) || 0), 0);
+    }
+    return ''; 
+  }
+  
+  getRollingTotal(): number {
+    return this.budgetData.reduce((total, row) => {
+      const rowTotal = this.calculateRowTotal(row);
+      return total + (!row.parent ? Number(rowTotal) : 0); 
+    }, 0);
+  }
   
   onCellBlur(rowIndex: number, monthUpdate: string, target: EventTarget | null): void {
     if (target instanceof HTMLTableCellElement) {
@@ -221,10 +233,10 @@ budgetData: BudgetRow[] = [
   
     this.budgetData.forEach(row => {
       const value = row[monthUpdate];
-      const { type, category, parent } = row;
+      const { type, parent, isSub } = row;
 
       if (type === rowType && !parent) {
-        if (category === "Sub Totals") {
+        if (isSub) {
           row[monthUpdate] = sum;
         } else if (typeof value === 'number') {
           sum += value;
@@ -249,13 +261,12 @@ budgetData: BudgetRow[] = [
   getOverallTotal(month: string): number {
     return this.budgetData.reduce((sum, row) => {
       const value = row[month];
-      if (typeof value === 'number' && row.category == "Sub Totals") {
+      if (typeof value === 'number' && row.isSub) {
         return sum + value;
       }
       return sum;
     }, 0);
   }
-  
 
   showContextMenu(event: MouseEvent, rowIndex: number, month: string) {
     event.preventDefault();
@@ -323,7 +334,7 @@ budgetData: BudgetRow[] = [
             type: result[0].type,
             ...this.initializeRow(index)
           })),
-          { category: 'Sub Totals', type: result[0].type , ...this.initializeRow(99) } 
+          { category: 'Sub Totals', isSub: true ,type: result[0].type , ...this.initializeRow(99) } 
         );
       }
     })
@@ -359,14 +370,14 @@ budgetData: BudgetRow[] = [
         type: 1,
         ...this.initializeRow(index)
       })),
-      { category: 'Sub Totals',type: 1,...this.initializeRow(99)},
+      { category: 'Sub Totals',isSub: true,type: 1,...this.initializeRow(99)},
       ...this.otherIncome.map((category, index) => ({
         category,
         parent: index === 0 ? true : false,
         type: 2,
         ...this.initializeRow(index)
       })),
-      { category: 'Sub Totals',type: 2,...this.initializeRow(99)} 
+      { category: 'Sub Totals',isSub: true, type: 2,...this.initializeRow(99)} 
     ];
   }
 
